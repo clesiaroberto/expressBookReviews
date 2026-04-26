@@ -44,7 +44,7 @@ regd_users.post("/login", (req,res) => {
   return res.status(200).json({message: "Login was successful"});
 });
 
-// Middleware to check token
+// Middleware to check token existance
 const authenticateJWT = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ message: "Missing token" });
@@ -58,20 +58,20 @@ const token = authHeader.split(" ")[1];
 
 
 // Add a book review
-regd_users.put("/auth/review/:isbn", authenticateJWT, (req, res) => {
+regd_users.put("/auth/review/:isbn", authenticateJWT, async(req, res) => {
   //Write your code here
   const {isbn} = req.params;
 
-  const {author, title, reviews} = req.body;
+  const {reviews} = req.body;
 
-  if(!books[isbn]){
+  if(! await books[isbn]){
     return res.status(404).json({message: "Record not found"})
   }
-
-  books[isbn] = { ...books[isbn], author, title, reviews };
-
-
-  return res.status(201).json({ message: "Book updated", book: books[isbn] });
+   
+  books[isbn].reviews = reviews;
+  
+  
+  return res.status(201).json({ message: "Review added successfully", reviews: books[isbn].reviews });
 })
 
 module.exports.authenticated = regd_users;

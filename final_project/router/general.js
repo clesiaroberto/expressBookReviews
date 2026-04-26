@@ -5,6 +5,7 @@ let users = require("./auth_users.js").users;
 const SECRET = require("./auth_users.js").SECRET;
 const jwt = require("./auth_users.js").jwt;
 const public_users = express.Router();
+const axios = require("axios");
 
 
 public_users.post("/register", (req,res) => {
@@ -31,34 +32,113 @@ public_users.post("/register", (req,res) => {
   return res.status(201).json({message: "User registered successfully"});
 });
 
+//route to get books
+public_users.get("/books", (req, res) => {
+  res.json(books);
+});
+
+
 // Get the book list available in the shop
-public_users.get('/',function (req, res) {
+public_users.get('/', async function (req, res) {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  try{
+    const book_list = await axios.get("http://localhost:5000/books");
+
+    res.status(200).json(book_list.data)
+
+  }catch(error){
+    res.status(404).json({message: "Book record was not found"})
+  }
 });
 
 // Get book details based on ISBN
-public_users.get('/isbn/:isbn',function (req, res) {
+public_users.get('/isbn/:isbn', async function (req, res) {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+ 
+  try{
+     const {isbn} = req.params;
+     
+    const book_list = await axios.get("http://localhost:5000/books");
+
+    const book = book_list.data[isbn];
+
+    if(book){
+       res.status(200).json(book);
+    }
+    return res.status(404).json({message: "Record was not found"})
+
+  }catch(error){
+    res.status(500).json({message: error.message})
+  }
  });
   
 // Get book details based on author
-public_users.get('/author/:author',function (req, res) {
+public_users.get('/author/:author', async function (req, res) {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  try{
+   const {author} = req.params;
+     
+    const book_list = await axios.get("http://localhost:5000/books");
+
+    const booksArray = Object.values(book_list.data);
+
+    // Find the book by author
+    const book = booksArray.find(b => b.author === author);
+
+    if(!book){
+      return res.status(404).json({message:"Book was not found"})
+    }
+    res.status(200).json(book)
+
+    //const book = book_list.data[isbn];
+  }catch(error){
+    res.status(500).json({message: error.message})
+  }
+
 });
 
 // Get all books based on title
-public_users.get('/title/:title',function (req, res) {
+public_users.get('/title/:title', async function (req, res) {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  try{
+   const {title} = req.params;
+     
+    const book_list = await axios.get("http://localhost:5000/books");
+
+    const booksArray = Object.values(book_list.data);
+
+    // Find the book by author
+    const book = booksArray.find(b => b.title === title);
+
+    if(!book){
+      return res.status(404).json({message:"Book was not found"})
+    }
+    res.status(200).json(book)
+
+  }catch(error){
+    res.status(500).json({message: error.message})
+  }
 });
 
 //  Get book review
-public_users.get('/review/:isbn',function (req, res) {
+public_users.get('/review/:isbn', async function (req, res) {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  try{
+     const {isbn} = req.params;
+     
+    const book_list = await axios.get("http://localhost:5000/books");
+
+    const book = book_list.data[isbn];
+
+    if(book){
+       res.status(200).json(book.reviews);
+    }
+    return res.status(404).json({message: "Record was not found"})
+
+  }catch(error){
+    res.status(500).json({message: error.message})
+  }
+ 
 });
 
 module.exports.general = public_users;
