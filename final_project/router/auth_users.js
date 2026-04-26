@@ -34,21 +34,45 @@ regd_users.post("/login", (req,res) => {
   const { username, password } = req.body;
 
   if(!authenticatedUser(username, password)){
-    return res.status(401).json({ message: "Invalid credentials" });
+    return res.status(401).json({ message: "Incorrect password or username" });
   }
 
   const user = users.find(u => u.username === username);
   const token = jwt.sign({ userId: user.id }, SECRET, { expiresIn: "1h" });
     
-  //res.json({token})
+  res.json({token})
   return res.status(200).json({message: "Login was successful"});
 });
 
+// Middleware to check token
+const authenticateJWT = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: "Missing token" });
+const token = authHeader.split(" ")[1];
+  jwt.verify(token, SECRET, (err, decoded) => {
+    if (err) return res.status(403).json({ message: "Invalid token" });
+    req.user = decoded;
+    next();
+  });
+};
+
+
 // Add a book review
-regd_users.put("/auth/review/:isbn", (req, res) => {
+regd_users.put("/auth/review/:isbn", authenticateJWT, (req, res) => {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
-});
+  const {isbn} = req.params;
+
+  const {author, title, reviews} = req.body;
+
+  if(!books[isbn]){
+    return res.status(404).json({message: "Record not found"})
+  }
+
+  books[isbn] = { ...books[isbn], author, title, reviews };
+
+
+  return res.status(201).json({ message: "Book updated", book: books[isbn] });
+})
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
