@@ -5,12 +5,29 @@ const regd_users = express.Router();
 
 let users = [];
 
+let SECRET = "superUsersBook";
+
 const isValid = (username)=>{ //returns boolean
 //write code to check is the username is valid
+  if(!username){
+     return false;
+  }else if(username.length < 3){
+     return false;
+  }else{
+    return true;
+  }
+
 }
 
 const authenticatedUser = (username,password)=>{ //returns boolean
 //write code to check if username and password match the one we have in records.
+  const userExists = users.find(u => u.username == username && u.password == password);
+  
+  if(userExists){
+    return true;
+  }
+  return false;
+
 }
 
 //only registered users can login
@@ -28,3 +45,5 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
 module.exports.users = users;
+module.exports.SECRET= SECRET;
+module.exports.jwt = jwt

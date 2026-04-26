@@ -12,11 +12,13 @@ app.use("/customer",session({secret:"fingerprint_customer",resave: true, saveUni
 
 app.use("/customer/auth/*", function auth(req,res,next){
 //Write the authenication mechanism here
+
 });
  
 const PORT =5000;
 
 app.use("/customer", customer_routes);
 app.use("/", genl_routes);
+app.use("/register", genl_routes);
 
 app.listen(PORT,()=>console.log("Server is running"));
