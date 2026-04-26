@@ -21,19 +21,27 @@ const isValid = (username)=>{ //returns boolean
 
 const authenticatedUser = (username,password)=>{ //returns boolean
 //write code to check if username and password match the one we have in records.
-  const userExists = users.find(u => u.username == username && u.password == password);
-  
-  if(userExists){
+  const user = users.find(u => u.username === username && u.password === password);
+  if (!user) {
+      return false;
+    }
     return true;
-  }
-  return false;
-
 }
 
 //only registered users can login
 regd_users.post("/login", (req,res) => {
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
+  const { username, password } = req.body;
+
+  if(!authenticatedUser(username, password)){
+    return res.status(401).json({ message: "Invalid credentials" });
+  }
+
+  const user = users.find(u => u.username === username);
+  const token = jwt.sign({ userId: user.id }, SECRET, { expiresIn: "1h" });
+    
+  //res.json({token})
+  return res.status(200).json({message: "Login was successful"});
 });
 
 // Add a book review
@@ -47,3 +55,4 @@ module.exports.isValid = isValid;
 module.exports.users = users;
 module.exports.SECRET= SECRET;
 module.exports.jwt = jwt
+module.exports.auth_users = regd_users;
