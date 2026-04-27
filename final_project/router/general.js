@@ -3,6 +3,7 @@ let books = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
+const axios = require("axios");
 
 // Register a new user
 public_users.post("/register", (req,res) => {
@@ -10,15 +11,11 @@ public_users.post("/register", (req,res) => {
   if(!isValid(username) || !password){
     return res.status(400).json({message: "Invalid username or password"});
   }
-
   const userExists = users.find(u => u.username === username);
   if(userExists){
     return res.status(409).json({message: "User already exists"});
   }
-
-  const user = {id: users.length + 1, username, password};
-  users.push(user);
-
+  users.push({username, password});
   return res.status(201).json({message: "User registered successfully"});
 });
 
@@ -36,7 +33,6 @@ public_users.post("/login", (req, res) => {
 
 // Get all books (callback style)
 public_users.get('/books', function (req, res) {
-  // simulate async with setTimeout
   setTimeout(() => {
     return res.status(200).json(books);
   }, 0);
@@ -49,7 +45,6 @@ public_users.get('/books', function (req, res) {
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn', function (req, res) {
   const { isbn } = req.params;
-
   new Promise((resolve, reject) => {
     const book = books[isbn];
     if (book) resolve(book);
@@ -62,7 +57,6 @@ public_users.get('/isbn/:isbn', function (req, res) {
 // Get book details based on author
 public_users.get('/author/:author', function (req, res) {
   const { author } = req.params;
-
   new Promise((resolve, reject) => {
     const matches = Object.values(books).filter(b => b.author === author);
     if (matches.length > 0) resolve(matches);
@@ -75,7 +69,6 @@ public_users.get('/author/:author', function (req, res) {
 // Get book details based on title
 public_users.get('/title/:title', function (req, res) {
   const { title } = req.params;
-
   new Promise((resolve, reject) => {
     const matches = Object.values(books).filter(b => b.title === title);
     if (matches.length > 0) resolve(matches);
@@ -88,7 +81,6 @@ public_users.get('/title/:title', function (req, res) {
 // Get book review
 public_users.get('/review/:isbn', function (req, res) {
   const { isbn } = req.params;
-
   new Promise((resolve, reject) => {
     const book = books[isbn];
     if (book && book.reviews) resolve(book.reviews);
@@ -96,6 +88,54 @@ public_users.get('/review/:isbn', function (req, res) {
   })
   .then(reviews => res.status(200).json(reviews))
   .catch(err => res.status(404).json({ message: err }));
+});
+
+// --------------------
+// CRUD with Async/Await + Axios
+// --------------------
+
+// Add or modify a review
+public_users.post('/review/:isbn', async (req, res) => {
+  try {
+    const { isbn } = req.params;
+    const { review } = req.body;
+    if (!books[isbn]) return res.status(404).json({ message: "Book not found" });
+    books[isbn].reviews = books[isbn].reviews || {};
+    books[isbn].reviews[`review${Object.keys(books[isbn].reviews).length+1}`] = review;
+    return res.status(200).json({ message: "Review added successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Modify a review
+public_users.put('/review/:isbn', async (req, res) => {
+  try {
+    const { isbn } = req.params;
+    const { key, review } = req.body;
+    if (!books[isbn] || !books[isbn].reviews[key]) {
+      return res.status(404).json({ message: "Review not found" });
+    }
+    books[isbn].reviews[key] = review;
+    return res.status(200).json({ message: "Review updated successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Delete a review
+public_users.delete('/review/:isbn', async (req, res) => {
+  try {
+    const { isbn } = req.params;
+    const { key } = req.body;
+    if (!books[isbn] || !books[isbn].reviews[key]) {
+      return res.status(404).json({ message: "Review not found" });
+    }
+    delete books[isbn].reviews[key];
+    return res.status(200).json({ message: "Review deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
 module.exports.general = public_users;
