@@ -32,8 +32,8 @@ public_users.post("/register", (req,res) => {
   return res.status(201).json({message: "User registered successfully"});
 });
 
-//route to get books
-public_users.get("/books", (req, res) => {
+
+public_users.get("/list", (req, res) => {
   res.json(books);
 });
 
@@ -42,7 +42,7 @@ public_users.get("/books", (req, res) => {
 public_users.get('/', async function (req, res) {
   //Write your code here
   try{
-    const book_list = await axios.get("http://localhost:5000/books");
+    const book_list = await axios.get("http://localhost:5000/list");
 
     res.status(200).json(book_list.data)
 
@@ -58,7 +58,7 @@ public_users.get('/isbn/:isbn', async function (req, res) {
   try{
      const {isbn} = req.params;
      
-    const book_list = await axios.get("http://localhost:5000/books");
+    const book_list = await axios.get("http://localhost:5000/list");
 
     const book = book_list.data[isbn];
 
@@ -78,7 +78,7 @@ public_users.get('/author/:author', async function (req, res) {
   try{
    const {author} = req.params;
      
-    const book_list = await axios.get("http://localhost:5000/books");
+    const book_list = await axios.get("http://localhost:5000/list");
 
     const booksArray = Object.values(book_list.data);
 
@@ -103,7 +103,7 @@ public_users.get('/title/:title', async function (req, res) {
   try{
    const {title} = req.params;
      
-    const book_list = await axios.get("http://localhost:5000/books");
+    const book_list = await axios.get("http://localhost:5000/list");
 
     const booksArray = Object.values(book_list.data);
 
@@ -126,7 +126,7 @@ public_users.get('/review/:isbn', async function (req, res) {
   try{
      const {isbn} = req.params;
      
-    const book_list = await axios.get("http://localhost:5000/books");
+    const book_list = await axios.get("http://localhost:5000/list");
 
     const book = book_list.data[isbn];
 
