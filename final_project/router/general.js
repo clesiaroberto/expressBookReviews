@@ -63,7 +63,7 @@ public_users.get('/isbn/:isbn', async function (req, res) {
     const book_list = await axios.get("http://localhost:5000/books");
     const booksArray = Object.values(book_list.data);
 
-    const book = booksArray.find(b => b.isbn === isbn);
+    const book = booksArray.find(b => b.isbn === isbn || String(b.isbn) === isbn);
 
     if(book){
       return res.status(200).json(book);
@@ -117,7 +117,7 @@ public_users.get('/review/:isbn', async function (req, res) {
     const book_list = await axios.get("http://localhost:5000/books");
     const booksArray = Object.values(book_list.data);
 
-    const book = booksArray.find(b => b.isbn === isbn);
+    const book = booksArray.find(b => b.isbn === isbn || String(b.isbn) === isbn);
 
     if(book){
       return res.status(200).json(book.reviews);
