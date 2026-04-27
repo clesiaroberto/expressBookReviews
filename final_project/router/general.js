@@ -8,11 +8,6 @@ const public_users = express.Router();
 const axios = require("axios");
 
 
-
-public_users.get("/list", (req, res) => {
-  res.json(books);
-});
-
 public_users.post("/register", (req,res) => {
   
   //Write your code here
@@ -38,11 +33,16 @@ public_users.post("/register", (req,res) => {
 });
 
 
+public_users.get("/books", (req, res) => {
+  res.json(books);
+});
+
+
 // Get the book list available in the shop
 public_users.get('/', async function (req, res) {
   //Write your code here
   try{
-    const book_list = await axios.get("http://localhost:5000/list");
+    const book_list = await axios.get("http://localhost:5000/books");
 
     res.status(200).json(book_list.data)
 
@@ -55,25 +55,21 @@ public_users.get('/', async function (req, res) {
 public_users.get('/isbn/:isbn', async function (req, res) {
   //Write your code here
  
-try{
+  try{
      const {isbn} = req.params;
      
-    const book_li = await axios.get("http://localhost:5000/list");
-    const booksArray = Object.values(book_li.data);
+    const book_list = await axios.get("http://localhost:5000/books");
 
-    // Find the book by author
-    const bo = booksArray.find(a => a.ISBN === isbn);
+    const book = book_list.data[isbn];
 
-    if(!bo){
-      return res.status(404).json({message: "Record was not found"})
+    if(book){
+       res.status(200).json(book);
     }
-    res.status(200).json(bo);
-    
+    return res.status(404).json({message: "Record was not found"})
 
   }catch(error){
     res.status(500).json({message: error.message})
   }
- 
  });
   
 // Get book details based on author
@@ -82,7 +78,7 @@ public_users.get('/author/:author', async function (req, res) {
   try{
    const {author} = req.params;
      
-    const book_list = await axios.get("http://localhost:5000/list");
+    const book_list = await axios.get("http://localhost:5000/books");
 
     const booksArray = Object.values(book_list.data);
 
@@ -107,17 +103,17 @@ public_users.get('/title/:title', async function (req, res) {
   try{
    const {title} = req.params;
      
-    const book_list2 = await axios.get("http://localhost:5000/list");
+    const book_list = await axios.get("http://localhost:5000/books");
 
-    const booksArray = Object.values(book_list2.data);
+    const booksArray = Object.values(book_list.data);
 
     // Find the book by author
-    const book2 = booksArray.find(i => i.title === title);
+    const book = booksArray.find(b => b.title === title);
 
-    if(!book2){
+    if(!book){
       return res.status(404).json({message:"Book was not found"})
     }
-    res.status(200).json(book2)
+    res.status(200).json(book)
 
   }catch(error){
     res.status(500).json({message: error.message})
@@ -130,17 +126,14 @@ public_users.get('/review/:isbn', async function (req, res) {
   try{
      const {isbn} = req.params;
      
-    const book_list3 = await axios.get("http://localhost:5000/list");
-    const booksArray = Object.values(book_list3.data);
+    const book_list = await axios.get("http://localhost:5000/books");
 
-    // Find the book by author
-    const book3 = booksArray.find(u => u.ISBN === isbn);
+    const book = book_list.data[isbn];
 
-    if(!book3){
-      return res.status(404).json({message: "Record was not found"})
+    if(book){
+       res.status(200).json(book.reviews);
     }
-    res.status(200).json(book3.reviews);
-    
+    return res.status(404).json({message: "Record was not found"})
 
   }catch(error){
     res.status(500).json({message: error.message})
