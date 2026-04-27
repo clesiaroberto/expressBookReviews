@@ -3,7 +3,6 @@ let books = require("./booksdb.js");
 let isValid = require("./auth_users.js").isValid;
 let users = require("./auth_users.js").users;
 const public_users = express.Router();
-const axios = require("axios");
 
 // Register a new user
 public_users.post("/register", (req,res) => {
@@ -26,106 +25,77 @@ public_users.post("/register", (req,res) => {
 // Login route
 public_users.post("/login", (req, res) => {
   const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res.status(400).json({ message: "Username and password are required" });
-  }
-
   const user = users.find(u => u.username === username && u.password === password);
-
-  if (!user) {
-    return res.status(401).json({ message: "Invalid credentials" });
-  }
-
-  // Grader expects only this message
+  if (!user) return res.status(401).json({ message: "Invalid credentials" });
   return res.status(200).json({ message: "Login was successful" });
 });
 
-// Get all books
-public_users.get("/books", (req, res) => {
-  res.json(books);
+// --------------------
+// Async/Callback style
+// --------------------
+
+// Get all books (callback style)
+public_users.get('/books', function (req, res) {
+  // simulate async with setTimeout
+  setTimeout(() => {
+    return res.status(200).json(books);
+  }, 0);
 });
 
-// Get book list (async)
-public_users.get('/', async function (req, res) {
-  try {
-    const book_list = await axios.get("http://localhost:5000/books");
-    res.status(200).json(book_list.data);
-  } catch(error) {
-    res.status(404).json({message: "Book record was not found"});
-  }
-});
+// --------------------
+// Promise style routes
+// --------------------
 
 // Get book details based on ISBN
-public_users.get('/isbn/:isbn', async function (req, res) {
-  try {
-    const {isbn} = req.params;
-    const book_list = await axios.get("http://localhost:5000/books");
-    const booksArray = Object.values(book_list.data);
+public_users.get('/isbn/:isbn', function (req, res) {
+  const { isbn } = req.params;
 
-    const book = booksArray.find(b => b.isbn === isbn || String(b.isbn) === isbn);
-
-    if(book){
-      return res.status(200).json(book);
-    }
-    return res.status(404).json({message: "Record was not found"});
-  } catch(error) {
-    res.status(500).json({message: error.message});
-  }
+  new Promise((resolve, reject) => {
+    const book = books[isbn];
+    if (book) resolve(book);
+    else reject("Book not found");
+  })
+  .then(book => res.status(200).json(book))
+  .catch(err => res.status(404).json({ message: err }));
 });
 
 // Get book details based on author
-public_users.get('/author/:author', async function (req, res) {
-  try {
-    const {author} = req.params;
-    const book_list = await axios.get("http://localhost:5000/books");
-    const booksArray = Object.values(book_list.data);
+public_users.get('/author/:author', function (req, res) {
+  const { author } = req.params;
 
-    const matches = booksArray.filter(b => b.author === author);
-
-    if(matches.length === 0){
-      return res.status(404).json({message:"No books found for this author"});
-    }
-    res.status(200).json(matches);
-  } catch(error) {
-    res.status(500).json({message: error.message});
-  }
+  new Promise((resolve, reject) => {
+    const matches = Object.values(books).filter(b => b.author === author);
+    if (matches.length > 0) resolve(matches);
+    else reject("No books found for this author");
+  })
+  .then(matches => res.status(200).json(matches))
+  .catch(err => res.status(404).json({ message: err }));
 });
 
 // Get book details based on title
-public_users.get('/title/:title', async function (req, res) {
-  try {
-    const {title} = req.params;
-    const book_list = await axios.get("http://localhost:5000/books");
-    const booksArray = Object.values(book_list.data);
+public_users.get('/title/:title', function (req, res) {
+  const { title } = req.params;
 
-    const matches = booksArray.filter(b => b.title === title);
-
-    if(matches.length === 0){
-      return res.status(404).json({message:"No books found with this title"});
-    }
-    res.status(200).json(matches);
-  } catch(error) {
-    res.status(500).json({message: error.message});
-  }
+  new Promise((resolve, reject) => {
+    const matches = Object.values(books).filter(b => b.title === title);
+    if (matches.length > 0) resolve(matches);
+    else reject("No books found with this title");
+  })
+  .then(matches => res.status(200).json(matches))
+  .catch(err => res.status(404).json({ message: err }));
 });
 
 // Get book review
-public_users.get('/review/:isbn', async function (req, res) {
-  try {
-    const {isbn} = req.params;
-    const book_list = await axios.get("http://localhost:5000/books");
-    const booksArray = Object.values(book_list.data);
+public_users.get('/review/:isbn', function (req, res) {
+  const { isbn } = req.params;
 
-    const book = booksArray.find(b => b.isbn === isbn || String(b.isbn) === isbn);
-
-    if(book){
-      return res.status(200).json(book.reviews);
-    }
-    return res.status(404).json({message: "Record was not found"});
-  } catch(error) {
-    res.status(500).json({message: error.message});
-  }
+  new Promise((resolve, reject) => {
+    const book = books[isbn];
+    if (book && book.reviews) resolve(book.reviews);
+    else reject("Reviews not found");
+  })
+  .then(reviews => res.status(200).json(reviews))
+  .catch(err => res.status(404).json({ message: err }));
 });
 
 module.exports.general = public_users;
