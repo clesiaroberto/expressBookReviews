@@ -55,21 +55,25 @@ public_users.get('/', async function (req, res) {
 public_users.get('/isbn/:isbn', async function (req, res) {
   //Write your code here
  
-  try{
+try{
      const {isbn} = req.params;
      
-    const book_list = await axios.get("http://localhost:5000/list");
+    const book_li = await axios.get("http://localhost:5000/list");
+    const booksArray = Object.values(book_li.data);
 
-    const book = book_list.data[isbn];
+    // Find the book by author
+    const bo = booksArray.find(a => a.ISBN === isbn);
 
-    if(book){
-       res.status(200).json(book);
+    if(!bo){
+      return res.status(404).json({message: "Record was not found"})
     }
-    return res.status(404).json({message: "Record was not found"})
+    res.status(200).json(bo);
+    
 
   }catch(error){
     res.status(500).json({message: error.message})
   }
+ 
  });
   
 // Get book details based on author
@@ -103,17 +107,17 @@ public_users.get('/title/:title', async function (req, res) {
   try{
    const {title} = req.params;
      
-    const book_list = await axios.get("http://localhost:5000/list");
+    const book_list2 = await axios.get("http://localhost:5000/list");
 
-    const booksArray = Object.values(book_list.data);
+    const booksArray = Object.values(book_list2.data);
 
     // Find the book by author
-    const book = booksArray.find(b => b.title === title);
+    const book2 = booksArray.find(i => i.title === title);
 
-    if(!book){
+    if(!book2){
       return res.status(404).json({message:"Book was not found"})
     }
-    res.status(200).json(book)
+    res.status(200).json(book2)
 
   }catch(error){
     res.status(500).json({message: error.message})
@@ -126,14 +130,17 @@ public_users.get('/review/:isbn', async function (req, res) {
   try{
      const {isbn} = req.params;
      
-    const book_list = await axios.get("http://localhost:5000/list");
+    const book_list3 = await axios.get("http://localhost:5000/list");
+    const booksArray = Object.values(book_list3.data);
 
-    const book = book_list.data[isbn];
+    // Find the book by author
+    const book3 = booksArray.find(u => u.ISBN === isbn);
 
-    if(book){
-       res.status(200).json(book.reviews);
+    if(!book3){
+      return res.status(404).json({message: "Record was not found"})
     }
-    return res.status(404).json({message: "Record was not found"})
+    res.status(200).json(book3.reviews);
+    
 
   }catch(error){
     res.status(500).json({message: error.message})
