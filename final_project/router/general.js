@@ -8,6 +8,11 @@ const public_users = express.Router();
 const axios = require("axios");
 
 
+
+public_users.get("/list", (req, res) => {
+  res.json(books);
+});
+
 public_users.post("/register", (req,res) => {
   
   //Write your code here
@@ -30,11 +35,6 @@ public_users.post("/register", (req,res) => {
   const token = jwt.sign({userId:user.id}, SECRET,{expiresIn: "1h"})
 
   return res.status(201).json({message: "User registered successfully"});
-});
-
-
-public_users.get("/list", (req, res) => {
-  res.json(books);
 });
 
 
